@@ -8,21 +8,49 @@ from model.user import User
 
 # Encode the payload into a JWT using the secret key
 def create_jwt(user):
-    secret_key_bytes = Fernet.generate_key()
 
-    payload = {
-        "id": user.id,
-        "name_lastname": user.name_lastname,
-        "department": user.department,
-        "email": user.email,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=2)
-    }
+    # Étape 1 : Génération de la clé secrète
+    try:
+        secret_key_bytes = Fernet.generate_key()
+    except Exception as e:
+        print(f"Erreur lors de la génération de la clé secrète : {e}")
+        raise
 
-    encoded_jwt = jwt.encode(payload, secret_key_bytes, algorithm="HS256")
+    # Étape 2 : Création du payload JWT
+    try:
+        payload = {
+            "id": user.id,
+            "name_lastname": user.name_lastname,
+            "department": user.department,
+            "email": user.email,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=2)
+        }
+    except Exception as e:
+        print(f"Erreur lors de la création du payload : {e}")
+        raise
 
-    user.secret_key = secret_key_bytes.decode('utf-8')
-    user.token = encoded_jwt
-    session.commit()
+    # Étape 3 : Encodage du token JWT
+    try:
+        encoded_jwt = jwt.encode(payload, secret_key_bytes, algorithm="HS256")
+    except Exception as e:
+        print(f"Erreur lors de l'encodage du token : {e}")
+        raise
+
+    # Étape 4 : Affectation des valeurs à l'utilisateur
+    try:
+        user.secret_key = secret_key_bytes.decode('utf-8')
+        user.token = encoded_jwt
+    except Exception as e:
+        print(f"Erreur lors de l'affectation des valeurs : {e}")
+        raise
+
+    # Étape 5 : Commit des changements dans la base de données
+    try:
+        session.commit()
+    except Exception as e:
+        print(f"Erreur lors du commit : {e}")
+        session.rollback()  # Rollback en cas d'échec
+        raise
 
     return encoded_jwt
 

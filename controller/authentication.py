@@ -28,22 +28,35 @@ def handle_authentication_choice(choice):
         if choice.isdigit():
             choice = int(choice)
             if 1 <= choice <= 3:
+                
                 if choice == 1:
-                    # Create a JWT token for the user
                     name_lastname, password = AuthenticationViews.token_creation()
+
+                    # Étape 1 : Récupération de tous les utilisateurs
                     user = User.find_all()
-                    user = next(
-                        (u for u in user if u.name_lastname == name_lastname
-                         and bcrypt.checkpw(password.encode(), u.password.encode())),
-                        None
-                    )
+
+                    # Étape 2 : Filtrage pour correspondance avec le mot de passe
+                    try:
+                        user = next(
+                            (u for u in user if u.name_lastname == name_lastname
+                            and bcrypt.checkpw(password.encode(), u.password.encode())),
+                            None
+                        )
+                    except Exception as e:
+                        print(f"Erreur lors de la vérification du mot de passe : {e}")
+
                     if user:
-                        # Encode JWT and display it to the user
-                        encoded_jwt = create_jwt(user)
-                        AuthenticationViews.token_print(encoded_jwt)
+                        # Étape 3 : Génération du token
+                        try:
+                            encoded_jwt = create_jwt(user)
+                            AuthenticationViews.token_print(encoded_jwt)
+                        except Exception as e:
+                            print(f"Erreur lors de la génération du token : {e}")
                     else:
-                        # Display authentication error
+                        print("Aucun utilisateur correspondant trouvé ou mot de passe incorrect.")
                         AuthenticationViews.error_authentication()
+
+                
                 elif choice == 2:
                     # Verify and decode a JWT token provided by the user
                     token = AuthenticationViews.token_cheking()
