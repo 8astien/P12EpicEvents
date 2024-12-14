@@ -1,0 +1,3 @@
+from controller.authentication import AuthenticationController
+
+AuthenticationController()
